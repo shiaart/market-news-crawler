@@ -23,7 +23,7 @@ def ifNotNull(query):
 
 def scrapeNasdaqSymbol(symbol, proxies):
     d = {}
-    url = 'https://www.nasdaq.com/symbol/%s' % (symbol)
+    url = 'https://seekingalpha.com/symbol/%s' % (symbol)
     log(url, tag="DATA")
 
     # Retrying for failed request
@@ -40,42 +40,58 @@ def scrapeNasdaqSymbol(symbol, proxies):
             soupPage = BeautifulSoup(response.text, "html.parser")
 
             # company name
-            headerWrapper = soupPage.find('div', id="qwidget-quote-wrap");
-            rawName = ifNotNull(headerWrapper.find('div', id="qwidget_pageheader").h1);
-            rawName = rawName.replace('Common Stock ', '')
-            rawName = rawName.replace('Quote & Summary Data', '')
-            d['name'] = rawName.strip() if rawName else ''
+            headerWrapper = soupPage.find('div', class_='symbol_title');
+            rawName = headerWrapper.h1.text
+            symbolName = rawName.split('-')
+            d['name'] = symbolName[1]
+            d['symbol'] = symbolName[0]
             log("COMPANY NAME OK", tag="DATA")
             
             # parse the about section
-            descr = soupPage.find('div', id="company-description")
-            d['about'] = descr.p.get_text(strip=True).replace('\r\n', ' ').replace('...More...', '').replace('View Company Description as filed with the SEC...', '')
-            log("ABOUT OK", tag="DATA")
-        
+            # descr = soupPage.find('span', {'class':'company-profile__description-excerpt company-profile__description-excerpt--ellipsis'}).text
+            # d['about'] = descr.get_text(strip=True).replace('\r\n', ' ').replace('...More...', '').replace('View Company Description as filed with the SEC...', '')
+            # log("ABOUT OK", tag="DATA")
+
+            #parse news
+            newsElement = soupPage.find('div', class_='feed news')
+            articles = newsElement.findAll('div', class_='symbol_article')
+            news = []
+            for n in articles:
+                newsLink = n.find('a').attrs['href']
+                external = newsLink.startswith('http')
+                if external:
+                    news.append(newsLink)
+                else:
+                    news.append('https://seekingalpha.com' + newsLink)
+
+            d['news'] = news[:3]
             # parse the header info
-            header = headerWrapper.find('div', id='qwidget_quote')
-            d['symbol'] = ifNotNull(header.find('div', class_="qwidget-symbol"))
-            d['price'] = ifNotNull(header.find('div', id="qwidget_lastsale"))
-            netChange = header.find('div', id="qwidget_netchange")
-            d['netChange'] = ifNotNull(netChange)
-            d['netChangeDir'] = 'incr' if 'qwidget-Green' in netChange['class'] else 'decr' 
-            d['percentChange'] = ifNotNull(header.find('div', id="qwidget_percent"))
+            #header = soupPage.find('span', class_='symbol-page-header__symbol')
+            #d['symbol'] = ifNotNull(soupPage.find('span', class_='symbol-page-header__symbol'))
+
+            #pricingHeader = soupPage.find('div', class_='symbol-page-header__pricings')
+            #element = soupPage.find('div', class_='ticker_container')
+            #d['price'] = element.find('div', id='symbol_last_trade')
+            #netChange = pricingHeader.find('span', class_='symbol-page-header__pricing-change')
+            #d['netChange'] = ifNotNull(netChange)
+            #d['netChangeDir'] = 'incr' if 'qwidget-Green' in netChange['class'] else 'decr'
+            #d['percentChange'] = ifNotNull(pricingHeader.find('span', class_='symbol-page-header__pricing-percent'))
             log("HEADER INFO OK", tag="DATA")
 
-            keyStockData = {}
-            table = soupPage.find('div', class_="row overview-results relativeP")
-            cols = table.find_all('div', class_="column span-1-of-2")
-            col1 = cols[0].div
-            col2 = cols[1].div
-            kvPairs = col1.find_all('div', class_='table-row') + col2.find_all('div', class_='table-row')
-            for i in kvPairs:
-                key = i.find_all('div', class_="table-cell")[0].b.text
-                value = i.find_all('div', class_="table-cell")[1].text
-                key = ''.join(key).strip() 
-                value = ' '.join(''.join(value).split()) 
-                keyStockData[key] = value
-            d['keyStockData'] = keyStockData
-            log("KEY STOCK DATA OK", tag="DATA")
+            # keyStockData = {}
+            # table = soupPage.find('div', class_="row overview-results relativeP")
+            # cols = table.find_all('div', class_="column span-1-of-2")
+            # col1 = cols[0].div
+            # col2 = cols[1].div
+            # kvPairs = col1.find_all('div', class_='table-row') + col2.find_all('div', class_='table-row')
+            # for i in kvPairs:
+            #     key = i.find_all('div', class_="table-cell")[0].b.text
+            #     value = i.find_all('div', class_="table-cell")[1].text
+            #     key = ''.join(key).strip()
+            #     value = ' '.join(''.join(value).split())
+            #     keyStockData[key] = value
+            # d['keyStockData'] = keyStockData
+            # log("KEY STOCK DATA OK", tag="DATA")
 
             return d
 
