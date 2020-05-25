@@ -52,14 +52,12 @@ def getFreeProxies():
     proxies = set()
 
     # look at 400 rows of the proxy table
-    for i in parser.xpath('//tbody/tr')[:500]:
+    for i in parser.xpath('//tbody/tr')[:20]:
         # if the proxy support HTTPS
         if i.xpath('.//td[7][contains(text(),"yes")]'):
-            # if the proxy is in the US, CA, MX
-            if i.xpath('.//td[3][contains(text(),"US")]') or i.xpath('.//td[3][contains(text(),"CA")]') or i.xpath('.//td[3][contains(text(),"MX")]'):
-                # save the proxy to our list
-                proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
-                proxies.add(proxy)
+            # save the proxy to our list
+            proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
+            proxies.add(proxy)
 
     print ("Possible Proxies: ", proxies)
     return list(proxies)
@@ -91,7 +89,7 @@ def getValidProxies():
         proxy = next(proxy_pool)
         print("\nRequest #%d using %s" % (i, proxy))
         try:
-            response = requests.get(url, proxies={"http": proxy, "https": proxy}, timeout=1.0)
+            response = requests.get(url, proxies={"http": proxy, "https": proxy}, timeout=3.0)
 
             # not good if it doesn't mask
             if myIP == response.json():

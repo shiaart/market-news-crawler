@@ -6,8 +6,6 @@ This file contains various methods for scraping data from nasdaq.com and seeking
 """
 
 from bs4 import BeautifulSoup
-import requests
-import re
 import time
 from headers import *
 import watson
