@@ -5,11 +5,11 @@ Click==7.0
 Flask==1.0.2
 idna==2.8
 itsdangerous==1.1.0
-Jinja2==2.10
+Jinja2>=2.10.1
 lxml==4.3.1
 MarkupSafe==1.1.0
 requests==2.21.0
 soupsieve==1.8
 urllib3==1.24.2
-Werkzeug==0.14.1
+werkzeug>=0.15.3
 watson_developer_cloud
