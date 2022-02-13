@@ -10,6 +10,6 @@ lxml==4.6.5
 MarkupSafe==1.1.0
 requests==2.21.0
 soupsieve==1.8
-urllib3==1.24.2
+urllib3==1.26.5
 werkzeug>=0.15.3
 watson_developer_cloud
